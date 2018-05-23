@@ -1,24 +1,24 @@
 # import libraries
 from selenium import webdriver
 import json
+import csv
 from astropy.table import Table
 from astropy.io import ascii
-# import httplib2
-# from __future__ import print_function
-# from httplib2 import Http
-# from oauth2client import file, client, tools
-# from oauth2client.service_account import ServiceAccountCredentials
-# from googleapiclient.discovery import build
-# from googleapiclient.http import MediaFileUpload
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
 
-# Setup the Sheets API
-# SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
-# store = file.Storage('credentials.json')
-# creds = store.get()
-# if not creds or creds.invalid:
-    # flow = client.flow_from_clientsecrets('client_secret.json', SCOPES)
-    # creds = tools.run_flow(flow, store)
-# service = build('sheets', 'v4', http=creds.authorize(Http()))
+scope = ['https://spreadsheets.google.com/feeds',
+         'https://www.googleapis.com/auth/drive']
+
+credentials = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+
+gc = gspread.authorize(credentials)
+
+sht = gc.open("icb summer '18")
+stats_wks = sht.get_worksheet(0)
+summary_wks = sht.get_worksheet(1)
+# stats_wks.update_cell(1, 1, 'Foo')
+# summary_wks.update_cell(1, 1, 'Foo')
 
 driver = webdriver.Chrome()
 
@@ -130,32 +130,44 @@ for page in icb_pages:
 cols = ['Name', 'Number', 'GP', 'Goals(2)', 'Assists(1)', 'PPG(1)', 'PPA(.5)', 'SHG(1)', 'SHA(.5)', 'GWG(1)', 'GWA(.5)',
         'PSG(1)', 'ENG(1)', 'SOG(1)', 'PTS', 'Fantasy Pts', 'Team']
 rows = []
-
+stats_wks.clear()
+stats_wks.append_row(cols)
 for key, v in data.items():
     row = [v['name'], v['number'], v['gp'], v['goals'], v['assists'], v['ppg'], v['ppa'], v['shg'], v['sha'],
            v['gwg'], v['gwa'], v['psg'], v['eng'], v['sog'], v['pts'], v['fantasy_pts'], v['team']]
     rows.append(row)
+    strRow = ''.join(str(e) for e in row)
+    stats_wks.append_row(row)
 t = Table(rows=rows, names=cols)
 print(t)
 ascii.write(t, 'icb.csv', format='csv')
+
 
 cols2 = ['Name', 'Number', 'GP', 'Goals(2)', 'Assists(1)', 'PPG(1)', 'PPA(.5)', 'SHG(1)', 'SHA(.5)', 'GWG(1)',
          'GWA(.5)', 'PSG(1)', 'ENG(1)', 'SOG(1)', 'PTS', 'Fantasy Pts']
 rows2 = []
 teamCols = ['Austin', 'Schlink', 'Markham', 'Bobby', 'Grant', 'Don', 'Dunn']
+blankRow = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+summary_wks.clear()
+summary_wks.append_row(['Summary:', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
 for i in range(len(teamCols)):
     teamRow = [teamCols[i], '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
     teamPts = 0
     rows2.append(teamRow)
     rows2.append(cols2)
+    summary_wks.append_row(teamRow)
+    summary_wks.append_row(cols2)
     for key, v in data.items():
         if v['team'] == teamCols[i]:
             row = [v['name'], v['number'], v['gp'], v['goals'], v['assists'], v['ppg'], v['ppa'], v['shg'], v['sha'],
                    v['gwg'], v['gwa'], v['psg'], v['eng'], v['sog'], v['pts'], v['fantasy_pts']]
             rows2.append(row)
+            summary_wks.append_row(row)
             teamPts += v['fantasy_pts']
+    totalPts = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Total:', teamPts]
+    summary_wks.append_row(totalPts)
     rows2.append(['', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Total:', teamPts])
-blankRow = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+
 tbl = Table(rows=rows2, names=blankRow)
 print(tbl)
 ascii.write(tbl, 'summary.csv', format='csv')
