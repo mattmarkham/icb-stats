@@ -148,25 +148,25 @@ cols2 = ['Name', 'Number', 'GP', 'Goals(2)', 'Assists(1)', 'PPG(1)', 'PPA(.5)', 
 rows2 = []
 teamCols = ['Austin', 'Schlink', 'Markham', 'Bobby', 'Grant', 'Don', 'Dunn']
 blankRow = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
-summary_wks.clear()
-summary_wks.append_row(['Summary:', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+# summary_wks.clear()
+# summary_wks.append_row(['Summary:', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
 for i in range(len(teamCols)):
     teamRow = [teamCols[i], '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
     teamPts = 0
     rows2.append(teamRow)
     rows2.append(cols2)
-    summary_wks.append_row(teamRow)
-    summary_wks.append_row(cols2)
+    # summary_wks.append_row(teamRow)
+    # summary_wks.append_row(cols2)
     for key, v in data.items():
         if v['team'] == teamCols[i]:
             row = [v['name'], v['number'], v['gp'], v['goals'], v['assists'], v['ppg'], v['ppa'], v['shg'], v['sha'],
                    v['gwg'], v['gwa'], v['psg'], v['eng'], v['sog'], v['pts'], v['fantasy_pts']]
             rows2.append(row)
-            summary_wks.append_row(row)
+            # summary_wks.append_row(row)
             teamPts += v['fantasy_pts']
     totalPts = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Total:', teamPts]
-    summary_wks.append_row(totalPts)
-    rows2.append(['', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Total:', teamPts])
+    # summary_wks.append_row(totalPts)
+    rows2.append(totalPts)
 
 tbl = Table(rows=rows2, names=blankRow)
 print(tbl)
